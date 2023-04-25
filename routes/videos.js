@@ -1,38 +1,55 @@
 const express = require('express');
-const router = express.Router() // To use router, insrtantiate it like this
-const fs = require('fs')
+const router = express.Router();
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+router.use(express.json());
+const path = require('path');
+const { request } = require('http');
 
-function readAthletesFile() {
-    const athletesList = fs.readFileSync("./data/athletes.json");
-    const parsedData = JSON.parse(athletesList);
+
+
+function readVideoFile() {
+    const videosList = fs.readFileSync("./data/videos.json");
+    const parsedData = JSON.parse(videosList);
     return parsedData;
 }
-
-router.get("/", (req, res) => {
-    const athletes = readAthletesFile();
-    res.json(athletes);
+router.get("/videos", (req, res) => {
+    const videos = readVideoFile();
+    res.json(videos);
 });
 
-// POST endpoint to add a athlete
-router.post("/", (req, res) => {    
-    // Make a new athlete with a unique id
-    console.log(req.body);
-    const newAthlete = {
+router.get("/videos/:id", (req, res) => {
+    const videos = readVideoFile();
+    const foundVideo = videos.find((video) => video.id === req.params.id);
+    if (foundVideo) {
+        res.json(foundVideo);
+    } else {
+        res.status(404).json({ message: "Video not found" });
+    }
+});
+
+router.post("/videos", (req, res) => {
+    console.log(req.body.title);
+    console.log(req.body.description);
+    const newVideo = {
         id: uuidv4(),
-        name: req.body.name,
-        nickname: req.body.nickname,
+        image: req.body.image,
+        title: req.body.title,
+        description: req.body.description,
+        views: 82,
+        likes: 673,
+        timestamp: new Date().getTime(),
+        comments: [],
+        video: "https://project-2-api.herokuapp.com/stream",
+        channel: "Nicole Fonseca",
+        duration: '3:33'
     };
-
-    // 1. Read the current athletes array
-    // 2. Add to the athletes array
-    // 3. Write the entire new athletes array to the file
-    const athletes = readAthletesFile();
-    athletes.push(newAthlete);
-    fs.writeFileSync("./data/athletes.json", JSON.stringify(athletes));
-
-    // Respond with the athlete that was created
-    res.status(201).json(newAthlete);
+    console.log(newVideo);
+    const videos = readVideoFile();
+    videos.push(newVideo);
+    fs.writeFileSync(path.join('./data/videos.json'), JSON.stringify(videos));
+    res.status(201).json(newVideo);
 });
+
 
 module.exports = router;
